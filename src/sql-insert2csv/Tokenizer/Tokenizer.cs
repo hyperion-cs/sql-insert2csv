@@ -72,27 +72,21 @@ public class Tokenizer
 
     public TPR ColumnNamesStart(int initOffset)
     {
-        var blockOffset = initOffset - 1;
-        while (true)
+        var blockOffset = SkipWhitespaces(initOffset);
+
+        if (blockOffset == _dataReader.BufferSize)
         {
-            if (++blockOffset == _dataReader.BufferSize)
+            if (_dataReader.TryReadBlock()) blockOffset = 0;
+            else return new();
+        }
+
+        if (_dataReader.Buffer[blockOffset] == CH_BRACKET_IN)
+        {
+            return new()
             {
-                if (_dataReader.TryReadBlock()) blockOffset = 0;
-                else break;
-            }
-
-            if (char.IsWhiteSpace(_dataReader.Buffer[blockOffset])) continue;
-
-            if (_dataReader.Buffer[blockOffset] == CH_BRACKET_IN)
-            {
-                return new()
-                {
-                    Success = true,
-                    Offset = ++blockOffset
-                };
-            }
-
-            break;
+                Success = true,
+                Offset = ++blockOffset
+            };
         }
 
         return new();
@@ -178,6 +172,7 @@ public class Tokenizer
     public TPR<ListPosition> LookAfterRow(int initOffset)
     {
         var blockOffset = SkipWhitespaces(initOffset);
+
         if (blockOffset == _dataReader.BufferSize)
         {
             if (_dataReader.TryReadBlock()) blockOffset = 0;
