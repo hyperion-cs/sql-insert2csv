@@ -55,17 +55,17 @@ public class Tokenizer
             InsertsCaptured++;
             LastInsertRowsCount = 0;
 
-            return new TPR
+            return new()
             {
                 Success = true,
                 Offset = cp
             };
         }
 
-        return new TPR();
+        return new();
     }
 
-    public TPR TableName(int initOffset)
+    public TPR<string> TableName(int initOffset)
     {
         return Val(initOffset, ID_QUOTE, TABLE_NAME_AFC, ESCAPE_CHAR);
     }
@@ -85,7 +85,7 @@ public class Tokenizer
 
             if (_dataReader.Buffer[blockOffset] == CH_BRACKET_IN)
             {
-                return new TPR
+                return new()
                 {
                     Success = true,
                     Offset = ++blockOffset
@@ -95,36 +95,36 @@ public class Tokenizer
             break;
         }
 
-        return new TPR();
+        return new();
     }
 
-    public TPR ColumnName(int initOffset)
+    public TPR<string> ColumnName(int initOffset)
     {
         return Val(initOffset, ID_QUOTE, COLUMN_NAME_AFC, ESCAPE_CHAR);
     }
 
-    public TPR LookAfterColumnName(int initOffset)
+    public TPR<ListPosition> LookAfterColumnName(int initOffset)
     {
         var blockOffset = SkipWhitespaces(initOffset);
 
         if (blockOffset == _dataReader.BufferSize)
         {
             if (_dataReader.TryReadBlock()) blockOffset = 0;
-            else return new TPR();
+            else return new();
         }
 
         if (_dataReader.Buffer[blockOffset] == CH_COMMA)
         {
-            return new TPR { Success = true, Data = ListPosition.Next, Offset = ++blockOffset };
+            return new() { Success = true, Data = ListPosition.Next, Offset = ++blockOffset };
         }
 
         blockOffset = ContainsPattern(LAST_COLUMN_NAME_PATTERN, blockOffset);
         if (blockOffset > 0)
         {
-            return new TPR { Success = true, Data = ListPosition.End, Offset = blockOffset };
+            return new() { Success = true, Data = ListPosition.End, Offset = blockOffset };
         }
 
-        return new TPR();
+        return new();
     }
 
     public TPR RowStart(int initOffset)
@@ -133,30 +133,30 @@ public class Tokenizer
         if (blockOffset == _dataReader.BufferSize)
         {
             if (_dataReader.TryReadBlock()) blockOffset = 0;
-            else return new TPR();
+            else return new();
         }
 
         if (_dataReader.Buffer[blockOffset] == CH_BRACKET_IN)
         {
-            return new TPR { Success = true, Offset = ++blockOffset };
+            return new() { Success = true, Offset = ++blockOffset };
         }
 
-        return new TPR();
+        return new();
     }
 
-    public TPR RowValue(int initOffset)
+    public TPR<string> RowValue(int initOffset)
     {
         return Val(initOffset, VALUE_QUOTE, ROW_VALUE_AFC, ESCAPE_CHAR);
     }
 
-    public TPR LookAfterRowValue(int initOffset)
+    public TPR<ListPosition> LookAfterRowValue(int initOffset)
     {
         var blockOffset = SkipWhitespaces(initOffset);
 
         if (blockOffset == _dataReader.BufferSize)
         {
             if (_dataReader.TryReadBlock()) blockOffset = 0;
-            else return new TPR();
+            else return new();
         }
 
         LastInsertRowsCount++;
@@ -164,40 +164,40 @@ public class Tokenizer
 
         if (_dataReader.Buffer[blockOffset] == CH_COMMA)
         {
-            return new TPR { Success = true, Data = ListPosition.Next, Offset = ++blockOffset };
+            return new() { Success = true, Data = ListPosition.Next, Offset = ++blockOffset };
         }
 
         if (_dataReader.Buffer[blockOffset] == CH_BRACKET_OUT)
         {
-            return new TPR { Success = true, Data = ListPosition.End, Offset = ++blockOffset };
+            return new() { Success = true, Data = ListPosition.End, Offset = ++blockOffset };
         }
 
-        return new TPR();
+        return new();
     }
 
-    public TPR LookAfterRow(int initOffset)
+    public TPR<ListPosition> LookAfterRow(int initOffset)
     {
         var blockOffset = SkipWhitespaces(initOffset);
         if (blockOffset == _dataReader.BufferSize)
         {
             if (_dataReader.TryReadBlock()) blockOffset = 0;
-            else return new TPR();
+            else return new();
         }
 
         if (_dataReader.Buffer[blockOffset] == CH_COMMA)
         {
-            return new TPR { Success = true, Data = ListPosition.Next, Offset = ++blockOffset };
+            return new() { Success = true, Data = ListPosition.Next, Offset = ++blockOffset };
         }
 
         if (_dataReader.Buffer[blockOffset] == CH_SEMICOLON)
         {
-            return new TPR { Success = true, Data = ListPosition.End, Offset = ++blockOffset };
+            return new() { Success = true, Data = ListPosition.End, Offset = ++blockOffset };
         }
 
-        return new TPR();
+        return new();
     }
 
-    protected TPR Val(int initOffset, char quote, char[] afterCharset, char escape)
+    protected TPR<string> Val(int initOffset, char quote, char[] afterCharset, char escape)
     {
         var val = new StringBuilder();
         var startFound = false;
@@ -239,7 +239,7 @@ public class Tokenizer
                     continue;
                 }
 
-                return new TPR();
+                return new();
             }
 
             if (quotedStart)
@@ -249,7 +249,7 @@ public class Tokenizer
                     if (++blockOffset == _dataReader.BufferSize)
                     {
                         if (_dataReader.TryReadBlock()) blockOffset = 0;
-                        else return new TPR();
+                        else return new();
                     }
 
                     val.Append(_dataReader.Buffer[blockOffset]);
@@ -292,21 +292,21 @@ public class Tokenizer
             return GetValIfEndCorrect(afterCharset, val, blockOffset);
         }
 
-        return new TPR();
+        return new();
     }
 
-    protected TPR GetValIfEndCorrect(char[] afterCharset, StringBuilder val, int blockOffset)
+    protected TPR<string> GetValIfEndCorrect(char[] afterCharset, StringBuilder val, int blockOffset)
     {
         if (blockOffset >= _dataReader.BufferSize)
         {
             if (_dataReader.TryReadBlock()) blockOffset = 0;
-            else return new TPR();
+            else return new();
         }
 
         if (afterCharset.Any(ac => ac == _dataReader.Buffer[blockOffset]))
         {
             var data = val.ToString();
-            return new TPR
+            return new()
             {
                 Success = true,
                 Data = data == NULL_VALUE ? string.Empty : data,
@@ -314,7 +314,7 @@ public class Tokenizer
             };
         }
 
-        return new TPR();
+        return new();
     }
 
     /// <summary>Returns true if the char does not require quotes.</summary>

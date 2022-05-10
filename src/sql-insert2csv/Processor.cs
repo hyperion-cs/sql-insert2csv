@@ -38,7 +38,7 @@ namespace SqlInsert2Sql
                 var tableName = tokenizer.TableName(insertStart.Offset);
                 if (!tableName.Success) throw new Exception("Error during token TableName.");
 
-                dataWriter.NextInsert(tokenizer.InsertsCaptured, (string)tableName.Data);
+                dataWriter.NextInsert(tokenizer.InsertsCaptured, tableName.Data);
 
                 var columnNamesStart = tokenizer.ColumnNamesStart(tableName.Offset);
                 if (!columnNamesStart.Success) throw new Exception("Error during token ColumnNamesStart.");
@@ -49,13 +49,13 @@ namespace SqlInsert2Sql
                     var columnName = tokenizer.ColumnName(blockOffset);
                     if (!columnName.Success) throw new Exception("Error during token ColumnName.");
 
-                    dataWriter.WriteField((string)columnName.Data);
+                    dataWriter.WriteField(columnName.Data);
 
                     var lookAfterColumnName = tokenizer.LookAfterColumnName(columnName.Offset);
                     if (!lookAfterColumnName.Success) throw new Exception("Error during token LookAfterColumnName.");
 
                     blockOffset = lookAfterColumnName.Offset;
-                    if ((ListPosition)lookAfterColumnName.Data == ListPosition.End)
+                    if (lookAfterColumnName.Data == ListPosition.End)
                     {
                         dataWriter.NextLine();
                         break;
@@ -73,13 +73,13 @@ namespace SqlInsert2Sql
                         var rowValue = tokenizer.RowValue(blockOffset);
                         if (!rowValue.Success) throw new Exception("Error during token RowValue.");
 
-                        dataWriter.WriteField((string)rowValue.Data);
+                        dataWriter.WriteField(rowValue.Data);
 
                         var lookAfterRowValue = tokenizer.LookAfterRowValue(rowValue.Offset);
                         if (!lookAfterRowValue.Success) throw new Exception("Error during token LookAfterRowValue.");
 
                         blockOffset = lookAfterRowValue.Offset;
-                        if ((ListPosition)lookAfterRowValue.Data == ListPosition.End)
+                        if (lookAfterRowValue.Data == ListPosition.End)
                         {
                             dataWriter.NextLine();
                             break;
@@ -90,7 +90,7 @@ namespace SqlInsert2Sql
                     if (!lookAfterRow.Success) throw new Exception("Error during token LookAfterRow.");
 
                     blockOffset = lookAfterRow.Offset;
-                    if ((ListPosition)lookAfterRow.Data == ListPosition.End)
+                    if (lookAfterRow.Data == ListPosition.End)
                     {
                         break;
                     }
