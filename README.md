@@ -12,7 +12,7 @@ However, this approach has a number of drawbacks:
 - Each DBMS requires a different skill to work with it;
 - Hard disk overhead required (actual `.sql` dump, imported dump, result in `.csv`).
 
-Now imagine that you are, for example, a big data researcher who has to do this kind of procedure on a regular basis. It's really shitty.
+Now imagine that you are, for example, a data researcher who has to do this kind of procedure on a regular basis. It's really shitty.
 
 This is where `sql-insert2csv` comes in ;)
 
