@@ -41,25 +41,34 @@ namespace SqlInsert2Sql
                 dataWriter.NextInsert(tokenizer.InsertsCaptured, tableName.Data);
 
                 var columnNamesStart = tokenizer.ColumnNamesStart(tableName.Offset);
-                if (!columnNamesStart.Success) throw new Exception("Error during token ColumnNamesStart.");
+                blockOffset = columnNamesStart.Offset; // This token returns an offset in any case.
 
-                blockOffset = columnNamesStart.Offset;
-                while (true)
+                if (columnNamesStart.Success)
                 {
-                    var columnName = tokenizer.ColumnName(blockOffset);
-                    if (!columnName.Success) throw new Exception("Error during token ColumnName.");
-
-                    dataWriter.WriteField(columnName.Data);
-
-                    var lookAfterColumnName = tokenizer.LookAfterColumnName(columnName.Offset);
-                    if (!lookAfterColumnName.Success) throw new Exception("Error during token LookAfterColumnName.");
-
-                    blockOffset = lookAfterColumnName.Offset;
-                    if (lookAfterColumnName.Data == ListPosition.End)
+                    while (true)
                     {
-                        dataWriter.NextLine();
-                        break;
+                        var columnName = tokenizer.ColumnName(blockOffset);
+                        if (!columnName.Success) throw new Exception("Error during token ColumnName.");
+
+                        dataWriter.WriteField(columnName.Data);
+
+                        var lookAfterColumnName = tokenizer.LookAfterColumnName(columnName.Offset);
+                        if (!lookAfterColumnName.Success) throw new Exception("Error during token LookAfterColumnName.");
+
+                        blockOffset = lookAfterColumnName.Offset;
+                        if (lookAfterColumnName.Data == ListPosition.End)
+                        {
+                            dataWriter.NextLine();
+                            break;
+                        }
                     }
+                }
+                else
+                {
+                    var withoutColumnNamesDefinition = tokenizer.WithoutColumnNamesDefinition(blockOffset);
+                    if (!withoutColumnNamesDefinition.Success) throw new Exception("Error during tokens ColumnNamesStart/WithoutColumnNamesDefinition.");
+
+                    blockOffset = withoutColumnNamesDefinition.Offset;
                 }
 
                 while (true)

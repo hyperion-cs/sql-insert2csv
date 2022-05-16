@@ -6,12 +6,13 @@ public class Tokenizer
 {
     protected readonly DataReader _dataReader;
 
-    protected readonly char[] TABLE_NAME_AFC = new[] { CH_BRACKET_IN };
+    protected readonly char[] TABLE_NAME_AFC = new[] { CH_BRACKET_IN, CH_V };
     protected readonly char[] COLUMN_NAME_AFC = new[] { CH_COMMA, CH_BRACKET_OUT };
     protected readonly char[] ROW_VALUE_AFC = new[] { CH_COMMA, CH_BRACKET_OUT };
 
     protected const string INSERT_START_PATTERN = "+INSERT+INTO+";
     protected const string LAST_COLUMN_NAME_PATTERN = "*)*VALUES*";
+    protected const string INSERT_WITHOUT_CN_DEF_PATTERN = "VALUES*";
 
     protected const char CH_BRACKET_IN = '(';
     protected const char CH_BRACKET_OUT = ')';
@@ -20,6 +21,7 @@ public class Tokenizer
     protected const char CH_NEGATIVE = '-';
     protected const char CH_DOT = '.';
     protected const char CH_UNDERSCORE = '_';
+    protected const char CH_V = 'V';
 
     /// <summary>Identifier (table/column name) quote char.</summary>
     protected readonly char ID_QUOTE;
@@ -72,8 +74,9 @@ public class Tokenizer
 
     public TPR ColumnNamesStart(int initOffset)
     {
-        var blockOffset = SkipWhitespaces(initOffset);
+        // This token returns an offset in any case.
 
+        var blockOffset = SkipWhitespaces(initOffset);
         if (blockOffset == _dataReader.BufferSize)
         {
             if (_dataReader.TryReadBlock()) blockOffset = 0;
@@ -89,7 +92,7 @@ public class Tokenizer
             };
         }
 
-        return new();
+        return new() { Offset = blockOffset };
     }
 
     public TPR<string> ColumnName(int initOffset)
@@ -116,6 +119,20 @@ public class Tokenizer
         if (blockOffset > 0)
         {
             return new() { Success = true, Data = ListPosition.End, Offset = blockOffset };
+        }
+
+        return new();
+    }
+
+    public TPR WithoutColumnNamesDefinition(int initOffset)
+    {
+        // The switch here is ONLY possible if the token Token.ColumnNamesStart in the INSERT statement is not detected.
+        // Skipping whitespaces and checking block offsets is not necessary because it was done earlier.
+
+        var blockOffset = ContainsPattern(INSERT_WITHOUT_CN_DEF_PATTERN, initOffset);
+        if (blockOffset > 0)
+        {
+            return new() { Success = true, Offset = blockOffset };
         }
 
         return new();
