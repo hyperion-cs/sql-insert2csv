@@ -346,7 +346,7 @@ public class Tokenizer
         const char CH_WS_P = '+'; // The equivalent of (?:^|\s+)
 
         var ptnPos = 0;
-        var leftHasWs = _dataReader.BlockNum == 0;
+        var leftHasWs = _dataReader.IsFirstBlock();
         var hasFalseIncrement = false;
 
         var i = blockOffset - 1;

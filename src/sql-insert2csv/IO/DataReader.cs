@@ -7,10 +7,11 @@ public class DataReader : IDisposable
     protected StreamReader _streamReader;
     protected readonly Encoding _encoding;
 
-    public readonly int BufferSize;
-    public readonly char[] Buffer;
+    protected const int FIRST_BLOCK_NUM = 0;
 
-    public long BlockNum { get; private set; }
+    public int BufferSize { get; }
+    public char[] Buffer { get; }
+    public long BlockNum { get; protected set; } = FIRST_BLOCK_NUM - 1;
 
     public DataReader(string path, string encoding, int buffer)
     {
@@ -26,6 +27,11 @@ public class DataReader : IDisposable
         {
             throw new Exception("It is not possible to read at least one data block.");
         }
+    }
+
+    public bool IsFirstBlock()
+    {
+        return BlockNum == FIRST_BLOCK_NUM;
     }
 
     public bool TryReadBlock()
