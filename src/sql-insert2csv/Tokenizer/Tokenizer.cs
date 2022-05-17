@@ -170,9 +170,6 @@ public class Tokenizer
             else return new();
         }
 
-        LastInsertRowsCount++;
-        TotalRowsCount++;
-
         if (_dataReader.Buffer[blockOffset] == CH_COMMA)
         {
             return new() { Success = true, Data = ListPosition.Next, Offset = ++blockOffset };
@@ -180,6 +177,9 @@ public class Tokenizer
 
         if (_dataReader.Buffer[blockOffset] == CH_BRACKET_OUT)
         {
+            LastInsertRowsCount++;
+            TotalRowsCount++;
+
             return new() { Success = true, Data = ListPosition.End, Offset = ++blockOffset };
         }
 
