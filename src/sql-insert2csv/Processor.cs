@@ -36,7 +36,10 @@ namespace SqlInsert2Sql
                 }
 
                 var tableName = tokenizer.TableName(insertStart.Offset);
-                if (!tableName.Success) throw new Exception("Error during token TableName.");
+                if (!tableName.Success)
+                {
+                    DebugAndThrow(dataReader, blockOffset, "Error during token TableName.");
+                }
 
                 dataWriter.NextInsert(tokenizer.InsertsCaptured, tableName.Data);
 
@@ -48,12 +51,18 @@ namespace SqlInsert2Sql
                     while (true)
                     {
                         var columnName = tokenizer.ColumnName(blockOffset);
-                        if (!columnName.Success) throw new Exception("Error during token ColumnName.");
+                        if (!columnName.Success)
+                        {
+                            DebugAndThrow(dataReader, blockOffset, "Error during token ColumnName.");
+                        }
 
                         dataWriter.WriteField(columnName.Data);
 
                         var lookAfterColumnName = tokenizer.LookAfterColumnName(columnName.Offset);
-                        if (!lookAfterColumnName.Success) throw new Exception("Error during token LookAfterColumnName.");
+                        if (!lookAfterColumnName.Success)
+                        {
+                            DebugAndThrow(dataReader, blockOffset, "Error during token LookAfterColumnName.");
+                        }
 
                         blockOffset = lookAfterColumnName.Offset;
                         if (lookAfterColumnName.Data == ListPosition.End)
@@ -66,7 +75,10 @@ namespace SqlInsert2Sql
                 else
                 {
                     var withoutColumnNamesDefinition = tokenizer.WithoutColumnNamesDefinition(blockOffset);
-                    if (!withoutColumnNamesDefinition.Success) throw new Exception("Error during tokens ColumnNamesStart/WithoutColumnNamesDefinition.");
+                    if (!withoutColumnNamesDefinition.Success)
+                    {
+                        DebugAndThrow(dataReader, blockOffset, "Error during tokens ColumnNamesStart/WithoutColumnNamesDefinition.");
+                    }
 
                     blockOffset = withoutColumnNamesDefinition.Offset;
                 }
@@ -74,18 +86,27 @@ namespace SqlInsert2Sql
                 while (true)
                 {
                     var rowStart = tokenizer.RowStart(blockOffset);
-                    if (!rowStart.Success) throw new Exception("Error during token RowStart.");
+                    if (!rowStart.Success)
+                    {
+                        DebugAndThrow(dataReader, blockOffset, "Error during token RowStart.");
+                    }
 
                     blockOffset = rowStart.Offset;
                     while (true)
                     {
                         var rowValue = tokenizer.RowValue(blockOffset);
-                        if (!rowValue.Success) throw new Exception("Error during token RowValue.");
+                        if (!rowValue.Success)
+                        {
+                            DebugAndThrow(dataReader, blockOffset, "Error during token RowValue.");
+                        }
 
                         dataWriter.WriteField(rowValue.Data);
 
                         var lookAfterRowValue = tokenizer.LookAfterRowValue(rowValue.Offset);
-                        if (!lookAfterRowValue.Success) throw new Exception("Error during token LookAfterRowValue.");
+                        if (!lookAfterRowValue.Success)
+                        {
+                            DebugAndThrow(dataReader, blockOffset, "Error during token LookAfterRowValue.");
+                        }
 
                         blockOffset = lookAfterRowValue.Offset;
                         if (lookAfterRowValue.Data == ListPosition.End)
@@ -96,7 +117,10 @@ namespace SqlInsert2Sql
                     }
 
                     var lookAfterRow = tokenizer.LookAfterRow(blockOffset);
-                    if (!lookAfterRow.Success) throw new Exception("Error during token LookAfterRow.");
+                    if (!lookAfterRow.Success)
+                    {
+                        DebugAndThrow(dataReader, blockOffset, "Error during token LookAfterRow.");
+                    }
 
                     blockOffset = lookAfterRow.Offset;
                     if (lookAfterRow.Data == ListPosition.End)
@@ -116,6 +140,18 @@ namespace SqlInsert2Sql
 
             Console.WriteLine($"Done. Total rows {tokenizer.TotalRowsCount}. " +
                               $"Time elapsed: {stopWatch.Elapsed}");
+        }
+
+        private static void DebugAndThrow(DataReader dataReader, int blockOffset, string problem)
+        {
+            var info = $"Block num: {dataReader.BlockNum}\n" +
+                       $"Block offset: {blockOffset}\n" +
+                       $"Problem: {problem}";
+
+            File.WriteAllText("debug.info", info);
+            File.WriteAllText("debug.buffer", new string(dataReader.Buffer));
+
+            throw new Exception(problem);
         }
     }
 }
