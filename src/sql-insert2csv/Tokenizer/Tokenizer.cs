@@ -52,7 +52,7 @@ public class Tokenizer
     public TPR InsertStart(int initOffset)
     {
         var cp = ContainsPattern(INSERT_START_PATTERN, initOffset);
-        if (cp > 0)
+        if (cp >= 0)
         {
             InsertsCaptured++;
             LastInsertRowsCount = 0;
@@ -116,7 +116,7 @@ public class Tokenizer
         }
 
         blockOffset = ContainsPattern(LAST_COLUMN_NAME_PATTERN, blockOffset);
-        if (blockOffset > 0)
+        if (blockOffset >= 0)
         {
             return new() { Success = true, Data = ListPosition.End, Offset = blockOffset };
         }
@@ -130,7 +130,7 @@ public class Tokenizer
         // Skipping whitespaces and checking block offsets is not necessary because it was done earlier.
 
         var blockOffset = ContainsPattern(INSERT_WITHOUT_CN_DEF_PATTERN, initOffset);
-        if (blockOffset > 0)
+        if (blockOffset >= 0)
         {
             return new() { Success = true, Offset = blockOffset };
         }
